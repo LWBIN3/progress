@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>database</title>
+    <link rel="stylesheet" href="progress.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nerko+One&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="sidebar">
+        <a href="./progress.html"><div class="sidebar-header">
+            <img src="./element/C2DB.png" alt="C2DB Logo" class="sidebar-logo">
+        </div></a>
+        <div class="sidebar-content">
+            <ul class="question-list">
+                <a href="https://www.google.com/webhp?hl=zh-TW&ictx=2&sa=X&ved=0ahUKEwizxobg54vrAhVDIqYKHd0aDlsQPQgH"><li class="question-item">Service</li></a>
+                <a href="https://c2db.fysik.dtu.dk/"><li class="question-item">Reference</li></a>
+                <a href="#"><li class="question-item">About</li></a>
+                <a href="https://next-gen.materialsproject.org/materials"><li class="question-item">More Info</li></a>
+            </ul>
+        </div>
+    </div>
+    <div class="main-content">
+        <!-- <div class="title">
+            <h1>Database</h1>
+        </div> -->
+        <div class="select-group">
+        <div class="select-item"> 
+            <label for="search">Material:</label>
+            <input type="search" id="search" data-search>
+        </div>
+        <div class="select-item"> 
+        <label for="species">Number of chemical species:</label>
+        <select id="" class="numbers">
+            <option value="all">-</option>
+            <option value="one">1</option>
+            <option value="two">2</option>
+            <option value="three">3</option>
+            <option value="four">4</option>
+            <option value="five">5</option>
+            <option value="six">6</option>
+            <option value="seven">7</option>
+            <option value="eight">8</option>
+            <option value="nine">9</option>
+        </select>
+        </div>
+        <div class="select-item"> 
+        <label for="magnetic">Magnetic:</label>
+        <select id="" class="magnetic">
+            <option value="-">-</option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+        </select>
+        </div>
+        <div class="select-item"> 
+        <label for="dynamic">Dynamically stable:</label>
+        <select>
+            <option value="-">-</option>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+            <option value="unknown">unknown</option>
+        </select>
+        </div>
+        </div>
+        </br>
+        <div class="pagetext"></div>
+        </br>
+        </br>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Formula</th>
+                        <th>Energy above convex hull [ev/atom]</th>
+                        <th>Heat of formation [ev/atom]</th>
+                        <th>Band gap (PBE)[ev]</th>
+                        <th>Magnetic</th>
+                        <th>Layer group</th>
+                    </tr>
+                </thead>
+                <tbody id="MaterialList" class="MaterialList">
+                </tbody>
+            </table>
+        </div>
+        <span class="pagectrl">
+            <select id="itemsPerPage">
+            <option value="25">25 / page</option>
+            <option value="50">50 / page</option>
+            <option value="75">75 / page</option>
+            </select>
+            <select id="gotoPage">
+        
+            </select>
+
+            <!-- 我存放next previous的地方 -->
+            <button id="previousPage">Previous</button>
+            <div class="pagination">
+            </div>
+            <button id="nextPage">Next</button>
+        </span>
+        </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
