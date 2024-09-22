@@ -143,6 +143,29 @@ select {
     max-width: 100%;
 }
 
+.short-input{
+    width: 100px;
+    height: 30px;
+    padding: 5px; /* 內邊距 */
+    margin: 0 12px; /* 左右間距 */
+    font-size: 14px;
+}
+
+.s-input{
+    width: 60px;
+    height: 30px;
+    padding: 5px; /* 內邊距 */
+    margin: 0 20px; /* 左右間距 */
+    font-size: 14px;
+}
+
+#energyinput{
+    display:inline;    
+}
+
+#bandgap{
+    display: inline;
+}
 
 
 table {
@@ -270,5 +293,12 @@ background-color: #ccc;
 #gotoPage{
     padding:5px 5px ;
     margin-right: 20px;
+}
+
+#goButton{
+    width: 50px;
+    display: inline;
+    position: relative;
+    left: 550px;
 }
 

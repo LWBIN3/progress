@@ -1,133 +1,171 @@
-let currentPage = 1; // 當前頁數
-let limit = 25; // 每頁顯示的資料數，現在可以變動
-let totalPages = 672;
-let data;
+let allMaterials = []; // 儲存所有材料數據
+let currentFilters = {
+  magstate: "-",
+  dyn_stab: "-",
+  numbers: "-",
+  minEnergy: "",
+  maxEnergy: "",
+};
+let currentPage = 1;
+let filteredMaterials = [];
+let itemsPerPage = 25; // 或者您想要的默認值
 
-// 當頁面加載完成時，初始化控件並獲取資料
 document.addEventListener("DOMContentLoaded", () => {
-  initializeControls();
-  loadMaterials(currentPage);
-});
+  fetchMaterials();
 
-function initializeControls() {
-  const gotoPageSelect = document.getElementById("gotoPage");
-  const itemsPerPageSelect = document.getElementById("itemsPerPage");
-  const prevButton = document.getElementById("previousPage");
-  const nextButton = document.getElementById("nextPage");
+  document.getElementById("magstate").addEventListener("change", updateFilters);
+  document.getElementById("dyn_stab").addEventListener("change", updateFilters);
+  document.getElementById("numbers").addEventListener("change", updateFilters);
+  document
+    .getElementById("min-energy")
+    .addEventListener("input", updateFilters);
+  document
+    .getElementById("max-energy")
+    .addEventListener("input", updateFilters);
 
-  // 初始化 "Go to page" 下拉選單
-  for (let i = 1; i <= totalPages; i++) {
-    const option = document.createElement("option");
-    option.value = i;
-    option.textContent = `Page ${i}`;
-    gotoPageSelect.appendChild(option);
-  }
-
-  // 設置事件監聽器
-  gotoPageSelect.addEventListener("change", (e) => {
-    if (e.target.value) {
-      currentPage = parseInt(e.target.value);
-      loadMaterials(currentPage);
-    }
+  document.getElementById("itemsPerPage").addEventListener("change", () => {
+    itemsPerPage = parseInt(document.getElementById("itemsPerPage").value);
+    currentPage = 1;
+    applyFilters();
   });
 
-  itemsPerPageSelect.addEventListener("change", (e) => {
-    limit = parseInt(e.target.value);
-    currentPage = 1; // 重置到第一頁
-    loadMaterials(currentPage);
+  document.getElementById("gotoPage").addEventListener("change", (e) => {
+    currentPage = parseInt(e.target.value);
+    displayMaterials(filteredMaterials);
   });
 
-  prevButton.addEventListener("click", () => {
+  document.getElementById("previousPage").addEventListener("click", () => {
     if (currentPage > 1) {
       currentPage--;
-      loadMaterials(currentPage);
+      displayMaterials(filteredMaterials);
     }
   });
 
-  nextButton.addEventListener("click", () => {
+  document.getElementById("nextPage").addEventListener("click", () => {
+    const totalPages = Math.ceil(filteredMaterials.length / itemsPerPage);
     if (currentPage < totalPages) {
       currentPage++;
-      loadMaterials(currentPage);
+      displayMaterials(filteredMaterials);
     }
   });
+
+  const searchMaterialInput = document.querySelector("[data-search]");
+  searchMaterialInput.addEventListener("input", updateFilters);
+
+  const searchStoichInput = document.querySelector("[data-stoich]");
+  searchStoichInput.addEventListener("input", updateFilters);
+
+  document.getElementById("goButton").addEventListener("click", applyFilters);
+});
+
+function updateFilters() {
+  currentFilters.magstate = document.getElementById("magstate").value;
+  currentFilters.dyn_stab = document.getElementById("dyn_stab").value;
+  currentFilters.numbers = document.getElementById("numbers").value;
+  currentFilters.searchMaterial = document.querySelector("[data-search]").value;
+  currentFilters.searchStoich = document
+    .querySelector("[data-stoich]")
+    .value.toLowerCase();
+  currentFilters.minEnergy = document.getElementById("min-energy").value;
+  currentFilters.maxEnergy = document.getElementById("max-energy").value;
 }
 
-// 獲取資料並顯示在表格中
-async function loadMaterials(page) {
+function applyFilters() {
+  filteredMaterials = allMaterials;
+
+  // 現有的篩選條件保持不變
+  if (currentFilters.magstate !== "-") {
+    filteredMaterials = filteredMaterials.filter(
+      (material) => material.magstate === currentFilters.magstate
+    );
+  }
+
+  if (currentFilters.dyn_stab !== "-") {
+    filteredMaterials = filteredMaterials.filter(
+      (material) => material.dyn_stab === currentFilters.dyn_stab
+    );
+  }
+
+  if (currentFilters.numbers !== "-") {
+    filteredMaterials = filteredMaterials.filter(
+      (material) => counting(material) === parseInt(currentFilters.numbers)
+    );
+  }
+
+  if (currentFilters.searchMaterial) {
+    filteredMaterials = filteredMaterials.filter((material) =>
+      material.folder
+        .split("/")
+        .pop()
+        .split("-")[0]
+        .includes(currentFilters.searchMaterial)
+    );
+  }
+
+  if (currentFilters.searchStoich) {
+    filteredMaterials = filteredMaterials.filter((material) =>
+      material.folder
+        .split("/")[6]
+        .toLowerCase()
+        .includes(currentFilters.searchStoich)
+    );
+  }
+
+  // 添加能量範圍篩選
+  if (currentFilters.minEnergy !== "") {
+    filteredMaterials = filteredMaterials.filter(
+      (material) => material.ehull >= parseFloat(currentFilters.minEnergy)
+    );
+  }
+
+  if (currentFilters.maxEnergy !== "") {
+    filteredMaterials = filteredMaterials.filter(
+      (material) => material.ehull <= parseFloat(currentFilters.maxEnergy)
+    );
+  }
+  let totalItems = filteredMaterials.length;
+  let totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  updatePaginationControls(totalPages);
+  displayMaterials(filteredMaterials);
+}
+
+function counting(material) {
+  // 從 folder 路徑中提取化學式
+  const chemicalFormula = material.folder.split("/")[6];
+
+  // 使用正則表達式匹配所有大寫英文字母
+  const regex = /[A-Z]/g;
+  const matches = chemicalFormula.match(regex);
+
+  // 返回大寫字母的數量，即化學物種的數量
+  return matches ? matches.length : 0;
+}
+
+function pageUpdate() {
+  console.log("sdf");
+}
+
+async function fetchMaterials() {
   try {
-    const response = await fetch(`/api/materials?page=${page}&limit=${limit}`);
-    data = await response.json(); // 更新全局变量 data
-    const pageshow = data.page;
-    const pagetotal = data.totalPages;
-    currentPage = pageshow; // 確保 currentPage 與後端返回的頁碼同步
-    totalPages = pagetotal; // 更新總頁數
-
-    const pagetext = document.querySelector(".pagetext");
-    pagetext.innerHTML = `We have ${pagetotal} pages and now you are in page ${pageshow}`;
-
-    updatePagination();
-    updateGotoPageSelect();
-
-    if (data && data.data.length > 0) {
-      displayMaterials(data.data);
-    } else {
-      console.log("No data found");
+    const response = await fetch("/api/material");
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    allMaterials = await response.json();
+    applyFilters(); // 這裡改變
   } catch (error) {
-    console.error("Error fetching materials:", error);
+    console.error("Fetch error:", error);
+    displayError("Error fetching materials data: " + error.message);
   }
 }
 
-function updatePagination() {
-  const downsidepage = document.querySelector(".pagination");
-  downsidepage.innerHTML = "";
+function updatePaginationControls(totalPages) {
+  const littlemssg = document.querySelector(".pagetext");
+  littlemssg.innerHTML = `There are ${totalPages} pages, ${filteredMaterials.length} materials found`;
 
-  // 計算要顯示的頁碼範圍
-  // let startPage, endPage;
-  // if (totalPages <= 5) {
-  //   startPage = 1;
-  //   endPage = totalPages;
-  // } else {
-  //   if (currentPage <= 3) {
-  //     startPage = 1;
-  //     endPage = 5;
-  //   } else if (currentPage + 2 >= totalPages) {
-  //     startPage = totalPages - 4;
-  //     endPage = totalPages;
-  //   } else {
-  //     startPage = currentPage - 2;
-  //     endPage = currentPage + 2;
-  //   }
-  // }
-
-  // 更新 Previous 按鈕狀態
-  const prevButton = document.getElementById("previousPage");
-  prevButton.disabled = currentPage === 1;
-  prevButton.classList.toggle("disabled-button", currentPage === 1);
-
-  // 更新 Next 按鈕狀態
-  const nextButton = document.getElementById("nextPage");
-  nextButton.disabled = currentPage === totalPages;
-  nextButton.classList.toggle("disabled-button", currentPage === totalPages);
-
-  // 生成頁碼按鈕
-  // for (let i = startPage; i <= endPage; i++) {
-  //   const pageButton = document.createElement("button");
-  //   pageButton.textContent = i;
-  //   pageButton.classList.add("page-item");
-  //   if (i === currentPage) {
-  //     pageButton.classList.add("active");
-  //   }
-  //   pageButton.addEventListener("click", () => {
-  //     loadMaterials(i);
-  //   });
-  //   downsidepage.appendChild(pageButton);
-  // }
-}
-
-function updateGotoPageSelect() {
   const gotoPageSelect = document.getElementById("gotoPage");
-  gotoPageSelect.innerHTML = '<option value="">Go to page...</option>';
+  gotoPageSelect.innerHTML = "";
   for (let i = 1; i <= totalPages; i++) {
     const option = document.createElement("option");
     option.value = i;
@@ -137,6 +175,48 @@ function updateGotoPageSelect() {
     }
     gotoPageSelect.appendChild(option);
   }
+
+  document.getElementById("previousPage").disabled = currentPage === 1;
+  document.getElementById("nextPage").disabled = currentPage === totalPages;
+}
+
+function displayMaterials(materials) {
+  const materialList = document.getElementById("MaterialList");
+  if (!materialList) {
+    console.error("MaterialList element not found");
+    return;
+  }
+  materialList.innerHTML = ""; // 清空表格
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const pageItems = materials.slice(startIndex, endIndex);
+
+  if (pageItems.length === 0) {
+    materialList.innerHTML = `
+    <tr>
+        <td colspan="6">No match found</td>
+    </tr>`;
+  } else {
+    pageItems.forEach((material) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${
+          material.folder
+            ? convertToSubscript(material.folder.split("/").pop().split("-")[0])
+            : "-"
+        }</td>
+        <td>${material.ehull ? material.ehull.toFixed(3) : "."}</td>
+        <td>${material.hform ? material.hform.toFixed(3) : "."}</td>
+        <td>${material.gap !== undefined ? material.gap.toFixed(3) : "."}</td>
+        <td>${material.magstate || "."}</td>
+        <td>${material.layergroup || "."}</td>
+      `;
+      materialList.appendChild(row);
+    });
+  }
+
+  updatePaginationControls(Math.ceil(materials.length / itemsPerPage));
 }
 
 function convertToSubscript(text) {
@@ -161,25 +241,17 @@ function convertToSubscript(text) {
   });
 }
 
-// 將資料顯示在表格中
-function displayMaterials(materials) {
+function displayError(message) {
   const materialList = document.getElementById("MaterialList");
-  materialList.innerHTML = ""; // 清空表格
-
-  materials.forEach((material) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${
-        material.folder
-          ? convertToSubscript(material.folder.split("/").pop().split("-")[0])
-          : "-"
-      }</td>
-      <td>${material.ehull ? material.ehull.toFixed(3) : "-"}</td>
-      <td>${material.hform ? material.hform.toFixed(3) : "-"}</td>
-      <td>${material.gap ? material.gap.toFixed(3) : "-"}</td>
-      <td>${material.magstate || "-"}</td>
-      <td>${material.layergroup || "-"}</td>
+  if (materialList) {
+    materialList.innerHTML = `
+      <tr>
+        <td colspan="6">${message}</td>
+      </tr>
     `;
-    materialList.appendChild(row);
-  });
+  }
+  const errorDiv = document.createElement("div");
+  errorDiv.style.color = "red";
+  errorDiv.textContent = message;
+  document.body.insertBefore(errorDiv, document.body.firstChild);
 }
