@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>database</title>
+    <link rel="stylesheet" href="new.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nerko+One&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="sidebar">
+        <a href="./new.html"><div class="sidebar-header">
+            <img src="./C2DB.png" alt="C2DB Logo" class="sidebar-logo">
+        </div></a>
+        <div class="sidebar-content">
+            <ul class="question-list">
+                <a href="https://www.google.com/webhp?hl=zh-TW&ictx=2&sa=X&ved=0ahUKEwizxobg54vrAhVDIqYKHd0aDlsQPQgH"><li class="question-item">Service</li></a>
+                <a href="https://c2db.fysik.dtu.dk/"><li class="question-item">Reference</li></a>
+                <a href="#"><li class="question-item">About</li></a>
+                <a href="https://next-gen.materialsproject.org/materials"><li class="question-item">More Info</li></a>
+            </ul>
+        </div>
+    </div>
+    <div class="main-content">
+        <!-- <div class="title">
+            <h1>Database</h1>
+        </div> -->
+
+        <div class="select-group">
+            <button id="goButton">Go</button>
+        <div class="select-item"> 
+            <label for="search">Material:</label>
+            <input type="search" id="search" data-search>
+        </div>
+        <div class="select-item"> 
+        <label for="species">Number of chemical species:</label>
+        <select id="numbers" class="numbers">
+            <option value="-">-</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+        </select>
+        </div>
+        <div class="select-item"> 
+            <label for="search">Stoichiometry:</label>
+            <input type="search" id="search"  data-stoich>
+        </div>
+      
+        <div class="select-item"> 
+        <label for="magnetic">Magnetic:</label>
+        <select id="magstate" class="magnetic">
+            <option value="-">-</option>
+            <option value="FM">yes</option>
+            <option value="NM">no</option>
+        </select>
+        </div>
+        <div class="select-item"> 
+        <label for="dynamic">Dynamically stable:</label>
+        <select id="dyn_stab">
+            <option value="-">-</option>
+            <option value="Yes">yes</option>
+            <option value="No">no</option>
+            <option value="Unknown">unknown</option>
+        </select>
+        </div>
+        
+        <div class="energyinput" id="energyinput">
+        <label for="energy">Energy above convex hull [eV/atom]:</label>
+        <input type="number" id="min-energy" name="min-energy" step="0.1" placeholder="0.0" class="short-input" first-input> -
+        <input type="number" id="max-energy" name="max-energy" step="0.1" placeholder="4.0" class="short-input" second-input">
+        </div>
+
+        <div class="bandgap" id="bandgap">
+            <label for="energy">Band gap range [eV]:</label>
+            <input type="number" id="min" step="0.1"  class="s-input" min-input> -
+            <input type="number" id="max" step="0.1"  class="s-input" max-input">
+            <select class="s-input">
+                <option value="PBE">PBE</option>
+                <option value="HSE">HSE</option>
+                <option value="GW">GW</option>
+            </select>
+        </div>
+        
+        
+      
+      
+        </div>
+        </br>
+        <div class="pagetext"></div>
+        </br>
+        </br>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Formula</th>
+                        <th>Energy above convex hull [ev/atom]</th>
+                        <th>Heat of formation [ev/atom]</th>
+                        <th>Band gap (PBE)[ev]</th>
+                        <th>Magnetic</th>
+                        <th>Layer group</th>
+                    </tr>
+                </thead>
+                <tbody id="MaterialList" class="MaterialList">
+                </tbody>
+            </table>
+        </div>
+        <span class="pagectrl">
+            <select id="itemsPerPage">
+            <option value="25">25 / page</option>
+            <option value="50">50 / page</option>
+            <option value="75">75 / page</option>
+            </select>
+            <select id="gotoPage">
+        
+            </select>
+
+            <!-- 我存放next previous的地方 -->
+            <button id="previousPage">Previous</button>
+    
+            <button id="nextPage">Next</button>
+        </span>
+        </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
