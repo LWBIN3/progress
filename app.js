@@ -15,7 +15,7 @@ app.get("/api/materials", async (req, res) => {
     const material = database.collection("testing");
 
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 25 || 50 || 75;
+    const limit = parseInt(req.query.limit) || 25;
     const skip = (page - 1) * limit;
 
     const result = await material.find({}).skip(skip).limit(limit).toArray();
@@ -64,3 +64,5 @@ process.on("SIGINT", async () => {
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "progress.html"));
 });
+
+console.log("happy");

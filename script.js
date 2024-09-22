@@ -83,22 +83,22 @@ function updatePagination() {
   downsidepage.innerHTML = "";
 
   // 計算要顯示的頁碼範圍
-  let startPage, endPage;
-  if (totalPages <= 5) {
-    startPage = 1;
-    endPage = totalPages;
-  } else {
-    if (currentPage <= 3) {
-      startPage = 1;
-      endPage = 5;
-    } else if (currentPage + 2 >= totalPages) {
-      startPage = totalPages - 4;
-      endPage = totalPages;
-    } else {
-      startPage = currentPage - 2;
-      endPage = currentPage + 2;
-    }
-  }
+  // let startPage, endPage;
+  // if (totalPages <= 5) {
+  //   startPage = 1;
+  //   endPage = totalPages;
+  // } else {
+  //   if (currentPage <= 3) {
+  //     startPage = 1;
+  //     endPage = 5;
+  //   } else if (currentPage + 2 >= totalPages) {
+  //     startPage = totalPages - 4;
+  //     endPage = totalPages;
+  //   } else {
+  //     startPage = currentPage - 2;
+  //     endPage = currentPage + 2;
+  //   }
+  // }
 
   // 更新 Previous 按鈕狀態
   const prevButton = document.getElementById("previousPage");
@@ -111,18 +111,18 @@ function updatePagination() {
   nextButton.classList.toggle("disabled-button", currentPage === totalPages);
 
   // 生成頁碼按鈕
-  for (let i = startPage; i <= endPage; i++) {
-    const pageButton = document.createElement("button");
-    pageButton.textContent = i;
-    pageButton.classList.add("page-item");
-    if (i === currentPage) {
-      pageButton.classList.add("active");
-    }
-    pageButton.addEventListener("click", () => {
-      loadMaterials(i);
-    });
-    downsidepage.appendChild(pageButton);
-  }
+  // for (let i = startPage; i <= endPage; i++) {
+  //   const pageButton = document.createElement("button");
+  //   pageButton.textContent = i;
+  //   pageButton.classList.add("page-item");
+  //   if (i === currentPage) {
+  //     pageButton.classList.add("active");
+  //   }
+  //   pageButton.addEventListener("click", () => {
+  //     loadMaterials(i);
+  //   });
+  //   downsidepage.appendChild(pageButton);
+  // }
 }
 
 function updateGotoPageSelect() {
