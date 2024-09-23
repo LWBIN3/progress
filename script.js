@@ -125,7 +125,7 @@ function applyFilters() {
   }
   let totalItems = filteredMaterials.length;
   let totalPages = Math.ceil(totalItems / itemsPerPage);
-
+  currentPage = 1;
   updatePaginationControls(totalPages);
   displayMaterials(filteredMaterials);
 }
@@ -140,10 +140,6 @@ function counting(material) {
 
   // 返回大寫字母的數量，即化學物種的數量
   return matches ? matches.length : 0;
-}
-
-function pageUpdate() {
-  console.log("sdf");
 }
 
 async function fetchMaterials() {
@@ -162,14 +158,18 @@ async function fetchMaterials() {
 
 function updatePaginationControls(totalPages) {
   const littlemssg = document.querySelector(".pagetext");
-  littlemssg.innerHTML = `There are ${totalPages} pages, ${filteredMaterials.length} materials found`;
-
+  let calcu = itemsPerPage * currentPage;
+  let endRow = Math.min(filteredMaterials.length, calcu);
+  littlemssg.innerHTML = `There are ${totalPages} pages, ${
+    filteredMaterials.length
+  } materials found, showing ${calcu - itemsPerPage + 1} - ${endRow} rows`;
   const gotoPageSelect = document.getElementById("gotoPage");
   gotoPageSelect.innerHTML = "";
   for (let i = 1; i <= totalPages; i++) {
     const option = document.createElement("option");
     option.value = i;
     option.textContent = `Page ${i}`;
+
     if (i === currentPage) {
       option.selected = true;
     }
