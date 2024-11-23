@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Atomic Structure</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        #controls {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            color: black;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="myDiv" style="width:100%;height:100vh;"></div>
+    <div id="controls">
+        Repeat X: <input type="number" id="repeatX" value="1" min="1" max="3"><br>
+        Repeat Y: <input type="number" id="repeatY" value="1" min="1" max="3"><br>
+        Repeat Z: <input type="number" id="repeatZ" value="1" min="1" max="3"><br>
+        <button id="updateButton">Update Structure</button><br>
+        <div id="latticeVectors"></div>
+    </div>
+    <script>
+        const cell = [
+            [3.920254340761232, 2.7775361322667767e-18, 0.0],
+            [-3.08087934375376e-18, 3.920254340761232, 0.0],
+            [-1.1142724697876672e-17, -5.476642603378312e-31, 39.125420000000005]
+        ];
+        
+        const a = [3.920254340761232, 0, 0];
+        const b = [0, 3.920254340761232, 0];
+        const c = [0, 0, 39.125420000000005];
+        const positions = [
+            [-0.0, 0.0, 17.61040372],
+            [1.96012717, 1.96012717, 21.51501628],
+            [0.0, 1.96012717, 15.23090393],
+            [1.96012717, 0.0, 23.89451607],
+            [-0.0, 1.96012717, 23.89451607],
+            [1.96012717, -0.0, 15.23090393],
+            [-0.0, -0.0, 20.64666306],
+            [1.96012717, 1.96012717, 18.47875694]
+        ];
+
+        const elements = ['Y', 'Y', 'Se', 'Se', 'Se', 'Se', 'Se', 'Se'];
+
+        let atoms = [];
+        let bonds = [];
+        let originalAtoms = [];
+
+        function createCylinder(x1, y1, z1, x2, y2, z2, radius, color1, color2, r1, r2) {
+        // 計算兩點之間的向量
+        const vector = [x2 - x1, y2 - y1, z2 - z1];
+        const length = Math.sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2);
+        
+        // 單位向量
+        const unitVector = vector.map(v => v / length);
+        
+        // 考慮原子半徑計算新的起點和終點
+        const start = [
+            x1 + unitVector[0] * r1,
+            y1 + unitVector[1] * r1,
+            z1 + unitVector[2] * r1
+        ];
+        
+        const end = [
+            x2 - unitVector[0] * r2,
+            y2 - unitVector[1] * r2,
+            z2 - unitVector[2] * r2
+        ];
+        
+        // 計算考慮原子半徑後的實際中點
+        const midX = (start[0] + end[0]) / 2;
+        const midY = (start[1] + end[1]) / 2;
+        const midZ = (start[2] + end[2]) / 2;
+
+        // 創建兩個圓柱體：一個從調整後的起點到中點，一個從中點到調整後的終點
+        const cylinder1 = createHalfCylinder(start[0], start[1], start[2], midX, midY, midZ, radius, color1);
+        const cylinder2 = createHalfCylinder(midX, midY, midZ, end[0], end[1], end[2], radius, color2);
+
+        return [cylinder1, cylinder2];
+    }
+    function createHalfCylinder(x1, y1, z1, x2, y2, z2, radius, color) {
+            const vector = [x2-x1, y2-y1, z2-z1];
+            const length = Math.sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2);
+
+            
+            // Create cylinder parameters
+            const t = Array.from({length: 20}, (_, i) => i * length / 19);
+            const theta = Array.from({length: 20}, (_, i) => i * 2 * Math.PI / 19);
+            
+            // Create cylinder surface points
+            let points = [];
+            theta.forEach(angle => {
+                t.forEach(h => {
+                    const r = radius;
+                    const x = r * Math.cos(angle);
+                    const y = h;
+                    const z = r * Math.sin(angle);
+                    points.push([x, y, z]);
+                });
+            });
+
+            // Rotate cylinder to align with bond direction
+            const angle = Math.acos(vector[1] / length);
+            const axis = [
+                vector[2] / Math.sqrt(vector[0]**2 + vector[2]**2),
+                0,
+                -vector[0] / Math.sqrt(vector[0]**2 + vector[2]**2)
+            ];
+
+            // Transform points
+            const transformedPoints = points.map(p => {
+                // Rotate
+                const rotated = rotateAroundAxis(p, axis, angle);
+                // Translate
+                return [
+                    rotated[0] + x1,
+                    rotated[1] + y1,
+                    rotated[2] + z1
+                ];
+            });
+
+            // Separate into x, y, z arrays
+            const x = transformedPoints.map(p => p[0]);
+            const y = transformedPoints.map(p => p[1]);
+            const z = transformedPoints.map(p => p[2]);
+
+            return {
+                type: 'mesh3d',
+                x: x,
+                y: y,
+                z: z,
+                // color: 'rgb(202 ,255, 112)',
+                color:color,
+                opacity: 1,
+                alphahull:0,
+                hoverinfo: 'skip', // 添加這行，禁用 hover text
+            };
+        }
+        function rotateAroundAxis(point, axis, angle) {
+            const [x, y, z] = point;
+            const [u, v, w] = axis;
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+
+            return [
+                (cos + u*u*(1-cos)) * x + (u*v*(1-cos) - w*sin) * y + (u*w*(1-cos) + v*sin) * z,
+                (u*v*(1-cos) + w*sin) * x + (cos + v*v*(1-cos)) * y + (v*w*(1-cos) - u*sin) * z,
+                (u*w*(1-cos) - v*sin) * x + (v*w*(1-cos) + u*sin) * y + (cos + w*w*(1-cos)) * z
+            ];
+        }
+
+        function generateSphereData(radius, centerX, centerY, centerZ, steps = 10) {
+            let x = [], y = [], z = [];
+            for (let theta = 0; theta <= Math.PI; theta += Math.PI / steps) {
+                for (let phi = 0; phi < 2 * Math.PI; phi += Math.PI / steps) {
+                    x.push(centerX + radius * Math.sin(theta) * Math.cos(phi));
+                    y.push(centerY + radius * Math.sin(theta) * Math.sin(phi));
+                    z.push(centerZ + radius * Math.cos(theta));
+                }
+            }
+            return {x, y, z};
+        }
+
+        function init() {
+            originalAtoms = positions.map((pos, i) => ({
+                x: pos[0],
+                y: pos[1],
+                z: pos[2],
+                element: elements[i]
+            }));
+            atoms = [...originalAtoms];
+            bonding();
+            createPlot();
+        }
+
+        function bonding() {
+            bonds = [];
+            const Y_Y_BOND_DISTANCE = 4.0;
+            const Y_Se_BOND_DISTANCE = 3.5;
+            const Se_Se_BOND_DISTANCE = 3.5;
+            
+            const Y_Y_BOND_THICKNESS = 0.18;
+            const Y_Se_BOND_THICKNESS = 0.15;
+            const Se_Se_BOND_THICKNESS = 0.15;
+            
+            // 定義原子半徑
+            const Y_RADIUS = 0.8;
+            const Se_RADIUS = 0.5;
+
+            for (let i = 0; i < atoms.length; i++) {
+                for (let j = i + 1; j < atoms.length; j++) {
+                    const dx = atoms[i].x - atoms[j].x;
+                    const dy = atoms[i].y - atoms[j].y;
+                    const dz = atoms[i].z - atoms[j].z;
+                    const distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                    
+                    let bondThickness = 0;
+                    let color1 = atoms[i].element === 'Y' ? 'cyan' : 'orange';
+                    let color2 = atoms[j].element === 'Y' ? 'cyan' : 'orange';
+                    
+                    // 獲取原子半徑
+                    const radius1 = atoms[i].element === 'Y' ? Y_RADIUS : Se_RADIUS;
+                    const radius2 = atoms[j].element === 'Y' ? Y_RADIUS : Se_RADIUS;
+
+                    if (atoms[i].element === 'Y' && atoms[j].element === 'Y' && distance < Y_Y_BOND_DISTANCE) {
+                        bondThickness = Y_Y_BOND_THICKNESS;
+                    } else if ((atoms[i].element === 'Y' && atoms[j].element === 'Se' ||
+                            atoms[i].element === 'Se' && atoms[j].element === 'Y') && 
+                            distance < Y_Se_BOND_DISTANCE) {
+                        bondThickness = Y_Se_BOND_THICKNESS;
+                    } else if (atoms[i].element === 'Se' && atoms[j].element === 'Se' && 
+                            distance < Se_Se_BOND_DISTANCE) {
+                        bondThickness = Se_Se_BOND_THICKNESS;
+                    }
+
+                    if (bondThickness > 0) {
+                        bonds.push({
+                            start: atoms[i],
+                            end: atoms[j],
+                            thickness: bondThickness,
+                            color1: color1,
+                            color2: color2,
+                            radius1: radius1,
+                            radius2: radius2
+                        });
+                    }
+                }
+            }
+        }
+
+        function createPlot() {
+            let data = [];
+            
+            // Create mesh3d for atoms
+            atoms.forEach(atom => {
+                const radius = atom.element === 'Y' ? 0.8 : 0.5;
+                const color = atom.element === 'Y' ? 'cyan' : 'orange';
+                const sphere = generateSphereData(radius, atom.x, atom.y, atom.z);
+                
+                data.push({
+                    type: 'mesh3d',
+                    x: sphere.x,
+                    y: sphere.y,
+                    z: sphere.z,
+                    alphahull: 0,
+                    color: color,
+                    opacity: 1,
+                    name: atom.element,
+                    hoverinfo: 'text',
+                    text: `${atom.element} (${atom.x.toFixed(2)}, ${atom.y.toFixed(2)}, ${atom.z.toFixed(2)})`
+                });
+            });
+
+            // Create bonds using cylinders with radius consideration
+            bonds.forEach(bond => {
+                const cylinders = createCylinder(
+                    bond.start.x, bond.start.y, bond.start.z,
+                    bond.end.x, bond.end.y, bond.end.z,
+                    bond.thickness,
+                    bond.color1,
+                    bond.color2,
+                    bond.radius1,
+                    bond.radius2
+                );
+                data.push(...cylinders);
+            });
+
+            // Create lattice box
+            const latticeBox = [
+                [0, 0, 0],
+                [a[0], 0, 0],
+                [a[0], b[1], 0],
+                [0, b[1], 0],
+                [0, 0, c[2]],
+                [a[0], 0, c[2]],
+                [a[0], b[1], c[2]],
+                [0, b[1], c[2]]
+            ];
+
+            const edges = [
+                [0, 1], [1, 2], [2, 3], [3, 0],
+                [4, 5], [5, 6], [6, 7], [7, 4],
+                [0, 4], [1, 5], [2, 6], [3, 7]
+            ];
+
+            let traceLatticeBox = {
+                x: [],
+                y: [],
+                z: [],
+                mode: 'lines',
+                line: {
+                    width: 2,
+                    color: [],
+                },
+                type: 'scatter3d',
+                name: 'Lattice Box'
+            };
+
+            edges.forEach((edge, index) => {
+                const [i, j] = edge;
+                traceLatticeBox.x.push(latticeBox[i][0], latticeBox[j][0], null);
+                traceLatticeBox.y.push(latticeBox[i][1], latticeBox[j][1], null);
+                traceLatticeBox.z.push(latticeBox[i][2], latticeBox[j][2], null);
+
+                let color = 'black';
+                if (index === 0) color = 'red';
+                else if (index === 3) color = 'green';
+                else if (index === 8) color = 'blue';
+                
+                traceLatticeBox.line.color.push(color, color, color);
+            });
+            data.push(traceLatticeBox);
+
+            let layout = {
+                title: 'Y2Se6 3D Atomic Structure',
+                scene: {
+                    xaxis: {title: 'X', showspikes: false, showgrid: false, zeroline: false, visible: false},
+                    yaxis: {title: 'Y', showspikes: false, showgrid: false, zeroline: false, visible: false},
+                    zaxis: {title: 'Z', showspikes: false, showgrid: false, zeroline: false, visible: false},
+                    aspectmode: 'data',
+                    aspectratio: {x: 1, y: 1, z: 2},
+                    camera: {
+                        eye: {x: 1.5, y: 1.5, z: 1},
+                        projection: {type: 'orthographic'}
+                    }
+                },
+                margin: {l: 0, r: 0, b: 0, t: 4}
+            };
+
+            Plotly.newPlot('myDiv', data, layout);
+        }
+
+        function periodicGrow(repeatX, repeatY, repeatZ) {
+            atoms = [];
+
+            for (let x = 0; x < repeatX; x++) {
+                for (let y = 0; y < repeatY; y++) {
+                    for (let z = 0; z < repeatZ; z++) {
+                        originalAtoms.forEach(atom => {
+                            atoms.push({
+                                x: atom.x + x * a[0] + y * b[0] + z * c[0],
+                                y: atom.y + x * a[1] + y * b[1] + z * c[1],
+                                z: atom.z + x * a[2] + y * b[2] + z * c[2],
+                                element: atom.element
+                            });
+                        });
+                    }
+                }
+            }
+
+            bonding();
+            createPlot();
+        }
+
+        init();
+
+        document.getElementById('updateButton').addEventListener('click', function() {
+            const repeatX = parseInt(document.getElementById('repeatX').value);
+            const repeatY = parseInt(document.getElementById('repeatY').value);
+            const repeatZ = parseInt(document.getElementById('repeatZ').value);
+            periodicGrow(repeatX, repeatY, repeatZ);
+        });
+    </script>
+</body>
+</html>
